@@ -89,17 +89,17 @@ capstone_frontend/
 
 **USSD Simulation:** Demonstrating the offline capability of the system where a farmer inputs their farm location, crop type, and planting date via a basic feature phone interface.
 
-<img src="images/phone.png" width="300" alt="USSD Phone Interface" />
+![USSD Phone Interface](img/phone.png)
 
 **Web Interface Testing:** Showcasing the web platform where the inputs from the USSD session are synchronized, displaying crop health alerts and yield predictions.
 
-<img src="images/dashboard.png" width="800" alt="Web Dashboard" />
+![Web Dashboard](img/dashboard.png)
 
 ### Demonstration of the functionality of the product with different data values:
 
 **Feedback Loop & Specific Farm Data:** Testing the machine learning model with varying inputs, such as evaluating a maize farm in Musanze against historical 2024-2025 weather and NDVI data. Different rainfall anomalies and NDVI trends trigger distinct color-coded stress alerts.
 
-<img src="images/farm%20screen.png" width="800" alt="Farm Screen Details" />
+![Web Dashboard](img/farm%20screen.png)
 
 ### Performance of the product running on different specifications of hardware or software:
 
