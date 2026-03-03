@@ -82,15 +82,16 @@ async def generate_prediction(request: PredictRequest):
         weather_data = get_live_weather(lat, lon, start_date, end_date)
         
         # Fixed: Only pass lat, lon, end_date
-        ndvi_data = get_live_ndvi(lat, lon, end_date) 
-        ndvi_score = ndvi_data["score"]
-        ndvi_start_date = ndvi_data["safe_start_date"]
+        ndvi_score = get_live_ndvi(lat, lon, start_date,end_date) 
+        ndvi_start_date = start_date
         
         # NEW: Fetch forecast and advisory
         forecast_data = get_7_day_forecast(lat, lon)
         advisory = generate_crop_advisory(crop, forecast_data["forecast_rain_mm"])
         
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"External API Error: {str(e)}")
 
     # 4. Prepare data for the Machine Learning Model

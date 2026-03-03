@@ -3,28 +3,25 @@ import { useParams, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { 
   Loader2, Sprout, CloudRain, Thermometer, 
   History, Play, ArrowLeft, Sun, Cloud, AlertCircle, MapPin 
 } from "lucide-react";
 import { farmerService } from "@/services/api";
-import { toast } from "sonner"; // <-- NEW IMPORT
+import { toast } from "sonner"; 
 
 const FarmDetails = () => {
   const { farmId } = useParams();
   const navigate = useNavigate();
   
-  // Data States
   const [farm, setFarm] = useState(null);
   const [history, setHistory] = useState([]);
   const [liveAdvisory, setLiveAdvisory] = useState(null);
   
-  // UI States
   const [loading, setLoading] = useState(true);
   const [predicting, setPredicting] = useState(false);
   const [loadingAdvisory, setLoadingAdvisory] = useState(false);
-  const [error, setError] = useState(null); // Keeping this for the initial page load only
+  const [error, setError] = useState(null); 
 
   const loadFarmData = () => {
     setLoading(true);
@@ -56,11 +53,9 @@ const FarmDetails = () => {
     setPredicting(true);
     try {
       await farmerService.triggerPrediction(farmId);
-      // --> TRIGGER SONNER SUCCESS TOAST <--
       toast.success("AI Assessment completed successfully!");
       loadFarmData(); 
     } catch (err) {
-      // --> TRIGGER SONNER ERROR TOAST <--
       toast.error("Failed to run AI assessment. Please ensure the model is loaded.");
     } finally {
       setPredicting(false);
@@ -72,10 +67,8 @@ const FarmDetails = () => {
     try {
       const response = await farmerService.getFarmAdvisory(farmId);
       setLiveAdvisory(response.data);
-      // --> TRIGGER SONNER SUCCESS TOAST <--
       toast.success("Live weather advisory fetched successfully!");
     } catch (err) {
-      // --> TRIGGER SONNER ERROR TOAST <--
       toast.error("Failed to fetch the 7-day weather forecast.");
     } finally {
       setLoadingAdvisory(false);
@@ -105,7 +98,6 @@ const FarmDetails = () => {
 
   return (
     <div className="p-6 space-y-8 max-w-6xl mx-auto pb-12">
-      {/* Navigation & Error Banner */}
       <div>
         <Button variant="ghost" onClick={() => navigate("/")} className="mb-4 pl-0 text-gray-500 hover:text-gray-900">
           <ArrowLeft className="mr-2 h-4 w-4" /> Back to Dashboard
@@ -119,7 +111,6 @@ const FarmDetails = () => {
         )}
       </div>
 
-      {/* Header Section */}
       <header className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 pb-6 border-b">
         <div className="space-y-3">
           <div className="flex items-center gap-3">
@@ -157,7 +148,6 @@ const FarmDetails = () => {
         </div>
       </header>
 
-      {/* Live Advisory Section (Displays only when requested) */}
       {liveAdvisory && (
         <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200 shadow-md transform transition-all animate-in fade-in slide-in-from-top-4">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -185,7 +175,6 @@ const FarmDetails = () => {
         </Card>
       )}
 
-      {/* Assessment & History Sections */}
       {!latest ? (
         <Card className="bg-gray-50 border-dashed border-2">
           <CardContent className="py-16 text-center text-gray-500 space-y-4">
@@ -257,43 +246,30 @@ const FarmDetails = () => {
           <section className="space-y-4 pt-4">
             <h2 className="text-2xl font-bold text-gray-800">Historical Tracking</h2>
             <Card className="shadow-sm overflow-hidden border-gray-200">
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader className="bg-gray-50">
-                    <TableRow>
-                      <TableHead className="font-semibold">Date</TableHead>
-                      <TableHead className="font-semibold">Season</TableHead>
-                      <TableHead className="font-semibold">Yield Rate</TableHead>
-                      <TableHead className="font-semibold">Total Harvest</TableHead>
-                      <TableHead className="text-right font-semibold">Health Status</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {history.map((item) => (
-                      <TableRow key={item._id} className="hover:bg-gray-50/50 transition-colors">
-                        <TableCell className="font-medium text-gray-900">
-                          {new Date(item.created_at || new Date()).toLocaleDateString(undefined, {
-                            year: 'numeric', month: 'short', day: 'numeric'
-                          })}
-                        </TableCell>
-                        <TableCell>{item.season}</TableCell>
-                        <TableCell className="text-gray-600">{item.predicted_yield_kg_ha} kg/ha</TableCell>
-                        <TableCell className="font-semibold text-gray-900">
-                          {item.total_estimated_harvest_kg ? `${item.total_estimated_harvest_kg.toLocaleString()} kg` : '-'}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <Badge variant={item.health_status === 'Green' ? 'default' : 'secondary'} 
-                                 className={item.health_status === 'Green' ? 'bg-green-100 text-green-800 hover:bg-green-100' : 
-                                            item.health_status === 'Yellow' ? 'bg-yellow-100 text-yellow-800 hover:bg-yellow-100' : 
-                                            'bg-red-100 text-red-800 hover:bg-red-100'}>
-                            {item.health_status}
-                          </Badge>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
+              <CardContent className="p-4 space-y-4">
+                {history.map((item) => (
+                  <div key={item._id} className="border-b pb-4 last:border-0 last:pb-0">
+                    <p className="font-medium text-gray-900">
+                      Date: {new Date(item.created_at || new Date()).toLocaleDateString(undefined, {
+                        year: 'numeric', month: 'short', day: 'numeric'
+                      })}
+                    </p>
+                    <p className="text-gray-600 mt-1">Season: {item.season}</p>
+                    <p className="text-gray-600 mt-1">Yield Rate: {item.predicted_yield_kg_ha} kg/ha</p>
+                    <p className="text-gray-600 mt-1">
+                      Total Harvest: {item.total_estimated_harvest_kg ? `${item.total_estimated_harvest_kg.toLocaleString()} kg` : '-'}
+                    </p>
+                    <p className="mt-2">
+                      <Badge variant={item.health_status === 'Green' ? 'default' : 'secondary'} 
+                             className={item.health_status === 'Green' ? 'bg-green-100 text-green-800 hover:bg-green-100' : 
+                                        item.health_status === 'Yellow' ? 'bg-yellow-100 text-yellow-800 hover:bg-yellow-100' : 
+                                        'bg-red-100 text-red-800 hover:bg-red-100'}>
+                        {item.health_status}
+                      </Badge>
+                    </p>
+                  </div>
+                ))}
+              </CardContent>
             </Card>
           </section>
         </>

@@ -2,8 +2,9 @@
 
 AgriGuard is a comprehensive platform designed to support smallholder farmers and agricultural professionals in Rwanda by providing data-driven insights for crop management. The system integrates machine learning algorithms, real-time 7-day weather forecasting, and USSD technology to deliver accurate crop yield predictions and actionable climate advisories directly to farmers, even without internet access or smartphones.
 
-Link to frontend: https://capstone-one-orpin.vercel.app/
-Link to backend: https://capstone-bh7m.onrender.com/
+- **Frontend:** https://capstone-one-orpin.vercel.app/
+- **Backend:** https://capstone-bh7m.onrender.com/
+- **Demo Video:** https://youtu.be/s-JRFrhCZng
 
 ## 🚀 Features
 
