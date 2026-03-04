@@ -1,0 +1,15 @@
+fastapi
+earthengine-api
+pandas
+numpy
+scikit-learn
+requests
+python-dotenv
+uvicorn
+streamlit
+matplotlib
+seaborn
+motor
+python-dotenv
+apscheduler
+python-multipart
