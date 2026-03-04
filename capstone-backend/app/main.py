@@ -6,7 +6,7 @@ from contextlib import asynccontextmanager
 
 # Import the shared state and the scheduler
 from app.state import ml_components
-from app.scheduler.cron_tasks import scheduler
+# from app.scheduler.cron_tasks import scheduler
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -25,15 +25,15 @@ async def lifespan(app: FastAPI):
         print(f"CRITICAL ERROR: Could not load the ML model. Error: {e}")
     
     # --- Startup: Start the Background Scheduler ---
-    scheduler.start()
-    print("SUCCESS: Background Automation Scheduler is running!")
+    # scheduler.start()
+    # print("SUCCESS: Background Automation Scheduler is running!")
     
     yield # Server is active
     
     # --- Shutdown: Clean up ---
-    scheduler.shutdown()
+    # scheduler.shutdown()
     ml_components.clear()
-    print("Server shutting down. Memory cleared and scheduler stopped.")
+    print("Server shutting down. Memory cleared.")
 
 # Initialize the API
 app = FastAPI(title="Rwanda Crop Monitoring API", lifespan=lifespan)
