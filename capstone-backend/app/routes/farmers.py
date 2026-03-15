@@ -3,7 +3,7 @@ from pydantic import BaseModel
 from datetime import datetime
 from bson import ObjectId
 
-from app.database import farmer_collection, farm_collection
+from app.database import farmer_collection, farm_collection, prediction_collection
 from app.models import FarmerModel, FarmModel
 
 # Create the router to handle these URLs
@@ -110,3 +110,36 @@ async def login_farmer(request: LoginRequest):
         "farmer_id": str(farmer["_id"]),
         "full_name": farmer["full_name"]
     }
+
+@router.get("/api/map-data")
+async def get_map_data():
+    """Fetches all farms and their most recent AI health status for the GIS Map."""
+    farms_cursor = farm_collection.find({})
+    farms = await farms_cursor.to_list(length=1000)
+    
+    map_markers = []
+    for farm in farms:
+        # 1. SKIP this farm entirely if it doesn't have real GPS coordinates saved
+        if "latitude" not in farm or "longitude" not in farm:
+            continue 
+            
+        # 2. Get the most recent prediction for this specific farm
+        latest_pred = await prediction_collection.find_one(
+            {"farm_id": str(farm["_id"])},
+            sort=[("created_at", -1)] # Sort by newest first
+        )
+        
+        # 3. Default to Gray/Unknown if no prediction exists yet
+        health = latest_pred["health_status"] if latest_pred else "Unknown"
+        
+        # 4. Append exact data with no hardcoded fallbacks
+        map_markers.append({
+            "farm_id": str(farm["_id"]),
+            "district": farm.get("district", "Unknown"),
+            "crop": farm.get("crop", "Unknown"),
+            "lat": farm["latitude"], 
+            "lng": farm["longitude"],
+            "health_status": health
+        })
+        
+    return map_markers

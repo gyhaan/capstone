@@ -5,6 +5,8 @@ import Signup from "./pages/Signup";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import FarmDetails from "./pages/FarmDetails";
+import Home from "./pages/Home";
+
 
 function App() {
   const [user, setUser] = useState(null);
@@ -25,9 +27,10 @@ function App() {
     <Toaster richColors position="top-right" />
     <BrowserRouter>
       <Routes>
+        <Route path="/" element={<Home />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/login" element={<Login onLoginSuccess={(id) => setUser(id)} />} />
-        <Route path="/" element={user ? <Dashboard /> : <Navigate to="/login" />} />
+        <Route path="/dashboard" element={user ? <Dashboard /> : <Navigate to="/login" />} />
         <Route path="/farm/:farmId" element={user ? <FarmDetails /> : <Navigate to="/login" />} />
         <Route path="*" element={<Navigate to="/login" />} />
       </Routes>
