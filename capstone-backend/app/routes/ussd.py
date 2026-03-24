@@ -3,11 +3,45 @@ from fastapi.responses import PlainTextResponse
 from app.database import farm_collection, prediction_collection, farmer_collection
 from datetime import datetime
 
-# --- IMPORTANT: Update these imports to match your actual backend structure ---
+# --- IMPORTANT: Update these imports to match the actual backend structure ---
 from app.services.weather_fetcher import get_7_day_forecast, generate_crop_advisory
 # from app.routes.predictions import run_farm_prediction
 
 router = APIRouter()
+
+# Mapping of Rwandan districts to their central GPS coordinates
+RWANDA_DISTRICT_COORDS = {
+    "gasabo": {"lat": -1.8841, "lon": 30.1306},
+    "kicukiro": {"lat": -1.9906, "lon": 30.1306},
+    "nyarugenge": {"lat": -1.9846, "lon": 30.0331},
+    "bugesera": {"lat": -2.2033, "lon": 30.1556},
+    "gatsibo": {"lat": -1.6030, "lon": 30.3168},
+    "kayonza": {"lat": -1.8606, "lon": 30.5186},
+    "kirehe": {"lat": -2.2683, "lon": 30.6558},
+    "ngoma": {"lat": -2.1624, "lon": 30.4325},
+    "nyagatare": {"lat": -1.2982, "lon": 30.3242},
+    "rwamagana": {"lat": -1.9487, "lon": 30.4347},
+    "gisagara": {"lat": -2.6241, "lon": 29.8155},
+    "huye": {"lat": -2.5967, "lon": 29.7394},
+    "kamonyi": {"lat": -2.0155, "lon": 29.8972},
+    "muhanga": {"lat": -2.0814, "lon": 29.7528},
+    "nyamagabe": {"lat": -2.4673, "lon": 29.4795},
+    "nyanza": {"lat": -2.3512, "lon": 29.7505},
+    "nyaruguru": {"lat": -2.7161, "lon": 29.5303},
+    "ruhango": {"lat": -2.2267, "lon": 29.7788},
+    "karongi": {"lat": -2.1554, "lon": 29.3515},
+    "ngororero": {"lat": -1.8596, "lon": 29.5442},
+    "nyabihu": {"lat": -1.6427, "lon": 29.4975},
+    "nyamasheke": {"lat": -2.3551, "lon": 29.1550},
+    "rubavu": {"lat": -1.6750, "lon": 29.2744},
+    "rusizi": {"lat": -2.5594, "lon": 28.9419},
+    "rutsiro": {"lat": -1.9167, "lon": 29.3167},
+    "burera": {"lat": -1.4398, "lon": 29.8459},
+    "gakenke": {"lat": -1.6961, "lon": 29.7828},
+    "gicumbi": {"lat": -1.6030, "lon": 30.0619},
+    "musanze": {"lat": -1.4998, "lon": 29.6349},
+    "rulindo": {"lat": -1.7457, "lon": 29.9880}
+}
 
 @router.post("/api/ussd", response_class=PlainTextResponse)
 async def ussd_callback(
@@ -95,14 +129,20 @@ async def ussd_callback(
                 size = text_array[logged_in_index + 3]
                 date = text_array[logged_in_index + 4]
                 
+                # Clean the input to match dictionary keys (lowercase, no extra spaces)
+                clean_district = district.strip().lower()
+                
+                # Look up coordinates, fallback to central Kigali if spelled wrong
+                coords = RWANDA_DISTRICT_COORDS.get(clean_district, {"lat": -1.9441, "lon": 30.0619})
+                
                 await farm_collection.insert_one({
                     "farmer_id": str(farmer["_id"]),
-                    "district": district,
-                    "crop": crop,
+                    "district": district.strip().title(), 
+                    "crop": crop.strip().title(),
                     "farm_size_ha": float(size),
                     "planting_date": date,
-                    "latitude": -1.9441, 
-                    "longitude": 30.0619,
+                    "latitude": coords["lat"], 
+                    "longitude": coords["lon"],
                     "created_at": datetime.utcnow()
                 })
                 return f"CON Farm added (Ifamu yongeweho)!\nAction (Hitamo):\n1. AI Assessment (Isuzuma AI)\n2. 7-Day Weather (Iteganyagihe)"

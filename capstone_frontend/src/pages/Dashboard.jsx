@@ -13,11 +13,15 @@ import {
 } from "lucide-react";
 import { farmerService } from "@/services/api";
 import RegisterFarmModal from "@/components/RegisterFarmModal";
-import { toast } from "sonner"; // <-- NEW IMPORT
-import FarmMap from "@/components/FarmMap";
+import { toast } from "sonner";
+import PortfolioHealthChart from "@/components/PortfolioHealthChart";
+import YieldPerformanceChart from "@/components/YieldPerformanceChart";
+import IrrigationForecastChart from "@/components/IrrigationForecastChart";
 
 const Dashboard = () => {
   const [farms, setFarms] = useState([]);
+  // --> NEW: Added predictions state <--
+  const [predictions, setPredictions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [cronLoading, setCronLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -29,12 +33,19 @@ const Dashboard = () => {
   const loadDashboardData = () => {
     if (!farmerId) return;
     setLoading(true);
-    farmerService
-      .getFarmerFarms(farmerId)
-      .then((res) => setFarms(res.data))
+
+    // Fetch farms AND predictions simultaneously using your clean farmerService
+    Promise.all([
+      farmerService.getFarmerFarms(farmerId),
+      farmerService.getFarmerHistory(farmerId),
+    ])
+      .then(([farmsRes, predsRes]) => {
+        setFarms(farmsRes.data);
+        setPredictions(predsRes.data);
+      })
       .catch((err) => {
-        console.error("Error loading farms:", err);
-        toast.error("Failed to load your fields.");
+        console.error("Error loading data:", err);
+        toast.error("Failed to load dashboard data.");
       })
       .finally(() => setLoading(false));
   };
@@ -43,28 +54,22 @@ const Dashboard = () => {
     loadDashboardData();
   }, [farmerId]);
 
-  // THIS IS WHERE WE USE THE CRON JOB ENDPOINT
   const handleTriggerCron = async () => {
     setCronLoading(true);
     try {
-      // 1. Send the request to start the background task
       await farmerService.triggerGlobalUpdate();
-
-      // 2. Alert the user with a styled Sonner toast
       toast.success("System update initiated!", {
         description:
           "The AI is scanning all registered farms via satellite. Refreshing in 10 seconds...",
-        duration: 10000, // Matches the timeout below!
+        duration: 10000,
       });
 
-      // 3. Wait 10 seconds to give the Python backend time to process the ML model, then refresh the UI
       setTimeout(() => {
         loadDashboardData();
         setCronLoading(false);
       }, 10000);
     } catch (error) {
       console.error("Cron failed:", error);
-      // --> TRIGGER SONNER ERROR TOAST <--
       toast.error(
         "Failed to trigger update. Check if your FastAPI server is running.",
       );
@@ -92,7 +97,6 @@ const Dashboard = () => {
           </p>
         </div>
         <div className="flex flex-col sm:flex-row gap-3">
-          {/* THE NEW TRIGGER BUTTON */}
           <Button
             onClick={handleTriggerCron}
             disabled={cronLoading}
@@ -116,12 +120,23 @@ const Dashboard = () => {
         </div>
       </header>
 
-      <section>
-        <h2 className="text-xl font-semibold mb-4 text-gray-800">
-          Regional Farm Health Overview
-        </h2>
-        <FarmMap />
-      </section>
+      {/* ---> NEW: CHARTS SECTION <--- */}
+      {/* We only show the charts if the farmer actually has farms registered */}
+      {farms.length > 0 && (
+        <section className="space-y-6">
+          
+          {/* TOP ROW: Donut Chart & Bar Chart */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="col-span-1">
+              <PortfolioHealthChart predictions={predictions} />
+            </div>
+            <div className="col-span-1 md:col-span-2">
+              <YieldPerformanceChart predictions={predictions} />
+            </div>
+          </div>
+
+        </section>
+      )}
 
       <section className="space-y-4">
         <h2 className="text-xl font-semibold text-gray-800">My Fields</h2>

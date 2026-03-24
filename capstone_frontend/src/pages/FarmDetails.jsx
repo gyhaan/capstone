@@ -10,6 +10,9 @@ import {
 import { farmerService } from "@/services/api";
 import { toast } from "sonner"; 
 
+// ---> IMPORT THE NEW CHART <---
+import IrrigationForecastChart from "@/components/IrrigationForecastChart";
+
 const FarmDetails = () => {
   const { farmId } = useParams();
   const navigate = useNavigate();
@@ -99,7 +102,7 @@ const FarmDetails = () => {
   return (
     <div className="p-6 space-y-8 max-w-6xl mx-auto pb-12">
       <div>
-        <Button variant="ghost" onClick={() => navigate("/")} className="mb-4 pl-0 text-gray-500 hover:text-gray-900">
+        <Button variant="ghost" onClick={() => navigate("/dashboard")} className="mb-4 pl-0 text-gray-500 hover:text-gray-900">
           <ArrowLeft className="mr-2 h-4 w-4" /> Back to Dashboard
         </Button>
         
@@ -148,11 +151,12 @@ const FarmDetails = () => {
         </div>
       </header>
 
+      {/* Manual Weather Check Popup */}
       {liveAdvisory && (
         <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200 shadow-md transform transition-all animate-in fade-in slide-in-from-top-4">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <div>
-              <CardTitle className="text-xl font-bold text-blue-900">7-Day Weather Advisory</CardTitle>
+              <CardTitle className="text-xl font-bold text-blue-900">Live Weather Ping</CardTitle>
               <CardDescription className="text-blue-700">Immediate guidance based on current forecasts</CardDescription>
             </div>
             <div className="h-12 w-12 bg-blue-100 rounded-full flex items-center justify-center">
@@ -240,6 +244,41 @@ const FarmDetails = () => {
                   <p className="text-xs text-gray-500 mt-1">Satellite NDVI score</p>
                 </CardContent>
               </Card>
+            </div>
+          </section>
+
+          {/* ---> NEW SECTION: The Weather Chart and Advisory <--- */}
+          <section className="space-y-4 pt-4 animate-in fade-in duration-500">
+            <h2 className="text-2xl font-bold text-gray-800">Irrigation & Weather Planner</h2>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              
+              {/* The Area Chart takes up 2/3 of the screen */}
+              <div className="col-span-1 lg:col-span-2">
+                <IrrigationForecastChart prediction={latest} />
+              </div>
+
+              {/* The AI Advisory takes up 1/3 of the screen */}
+              <div className="col-span-1">
+                <Card className="h-full bg-blue-50 border-blue-100 shadow-sm flex flex-col">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-lg text-blue-900 flex items-center gap-2">
+                      <Sun className="h-5 w-5 text-blue-600" />
+                      AI Agronomist
+                    </CardTitle>
+                    <CardDescription className="text-blue-700">7-Day strategic action plan</CardDescription>
+                  </CardHeader>
+                  <CardContent className="flex-1">
+                    {latest.crop_advisory ? (
+                      <p className="text-blue-900 font-medium leading-relaxed">
+                        {latest.crop_advisory}
+                      </p>
+                    ) : (
+                      <p className="text-blue-400 italic">No advisory generated for this assessment.</p>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
+
             </div>
           </section>
 

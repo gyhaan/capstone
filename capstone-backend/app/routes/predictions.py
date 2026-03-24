@@ -3,6 +3,8 @@ from pydantic import BaseModel
 from datetime import datetime, timedelta
 import pandas as pd
 from bson import ObjectId
+import json
+import os
 
 from app.database import farm_collection, prediction_collection
 from app.models import PredictionModel
@@ -13,6 +15,22 @@ from app.scheduler.cron_tasks import weekly_crop_health_update
 
 # Create the router to handle these specific URLs
 router = APIRouter()
+
+# --- NEW: Load the JSON Baselines at Server Startup ---
+# This ensures we don't slow down the API by reading the file on every single request
+try:
+    # Assuming this file runs from the root of your FastAPI project
+    with open("crop_baselines.json", "r") as f:
+        baseline_data = json.load(f)
+    REGIONAL_BASELINES = baseline_data.get("regional_baselines", {})
+    GLOBAL_CROP_FALLBACKS = baseline_data.get("global_fallbacks", {})
+    print("✅ Successfully loaded crop baselines into memory.")
+except FileNotFoundError:
+    print("⚠️ Warning: crop_baselines.json not found. Using default 1500 kg/ha fallback.")
+    REGIONAL_BASELINES = {}
+    GLOBAL_CROP_FALLBACKS = {}
+# ------------------------------------------------------
+
 
 # A simple Pydantic model for the incoming request
 class PredictRequest(BaseModel):
@@ -85,7 +103,7 @@ async def generate_prediction(request: PredictRequest):
         ndvi_score = get_live_ndvi(lat, lon, start_date,end_date) 
         ndvi_start_date = start_date
         
-        # NEW: Fetch forecast and advisory
+        # Fetch forecast and advisory
         forecast_data = get_7_day_forecast(lat, lon)
         advisory = generate_crop_advisory(crop, forecast_data["forecast_rain_mm"])
         
@@ -111,10 +129,18 @@ async def generate_prediction(request: PredictRequest):
     predicted_yield = ml_components["model"].predict(input_df)[0]
     total_estimated_harvest_kg = predicted_yield * farm_size_ha
 
-    # 6. Calculate RAG Health Status (The Traffic Light System)
-    baseline_yield = 1500.0 
+    # 6. Calculate RAG Health Status USING DYNAMIC BASELINES
+    # Construct the lookup key based on the farmer's specific farm
+    baseline_key = f"{district}_{crop}"
+
+    baseline_yield = REGIONAL_BASELINES.get(
+        baseline_key, 
+        GLOBAL_CROP_FALLBACKS.get(crop, 1500.0)
+    )
+
     ratio = predicted_yield / baseline_yield
 
+    # Evaluate against the localized benchmark
     if ratio >= 0.9 and ndvi_score > 0.45:
         health_status = "Green"
     elif ratio >= 0.75:
@@ -130,14 +156,14 @@ async def generate_prediction(request: PredictRequest):
         total_rainfall_mm=weather_data["Total_Rainfall_mm"],
         average_temp_c=weather_data["Average_Temp_C"],
         mean_ndvi=ndvi_score,
-        ndvi_start_date=ndvi_start_date, # Fixed
+        ndvi_start_date=ndvi_start_date,
         predicted_yield_kg_ha=round(predicted_yield, 2),
         total_estimated_harvest_kg=round(total_estimated_harvest_kg, 2), 
         baseline_yield_kg_ha=baseline_yield,
         health_status=health_status,
-        forecast_rain_mm=forecast_data["forecast_rain_mm"], # Fixed
-        forecast_temp_c=forecast_data["forecast_temp_c"], # Fixed
-        crop_advisory=advisory # Fixed
+        forecast_rain_mm=forecast_data["forecast_rain_mm"],
+        forecast_temp_c=forecast_data["forecast_temp_c"], 
+        crop_advisory=advisory 
     )
 
     # 8. Save to MongoDB
@@ -168,7 +194,6 @@ async def trigger_cron_job(background_tasks: BackgroundTasks):
     background_tasks.add_task(weekly_crop_health_update)
     return {"message": "Global update started in the background."}
 
-# Add this new endpoint
 @router.get("/api/farms/{farm_id}/advisory")
 async def get_farm_advisory(farm_id: str):
     """

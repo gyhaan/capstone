@@ -129,17 +129,27 @@ async def get_map_data():
             sort=[("created_at", -1)] # Sort by newest first
         )
         
-        # 3. Default to Gray/Unknown if no prediction exists yet
-        health = latest_pred["health_status"] if latest_pred else "Unknown"
-        
-        # 4. Append exact data with no hardcoded fallbacks
+        # 3. Extract health and telemetry data (defaulting to 0/Unknown if no prediction exists)
+        if latest_pred:
+            health = latest_pred.get("health_status", "Unknown")
+            predicted_yield = latest_pred.get("predicted_yield_kg_ha", 0)
+            mean_ndvi = latest_pred.get("mean_ndvi", 0)
+        else:
+            health = "Unknown"
+            predicted_yield = 0
+            mean_ndvi = 0
+            
+        # 4. Append exact data including the new telemetry fields for the Popups
         map_markers.append({
             "farm_id": str(farm["_id"]),
             "district": farm.get("district", "Unknown"),
             "crop": farm.get("crop", "Unknown"),
             "lat": farm["latitude"], 
             "lng": farm["longitude"],
-            "health_status": health
+            "health_status": health,
+            # ---> NEW DATA ADDED HERE <---
+            "predicted_yield_kg_ha": predicted_yield,
+            "mean_ndvi": round(mean_ndvi, 2) if isinstance(mean_ndvi, float) else mean_ndvi
         })
         
     return map_markers
