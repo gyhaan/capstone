@@ -39,7 +39,7 @@ export default function Login({ onLoginSuccess }) {
       // Update the App's state (for immediate redirect)
       onLoginSuccess(response.data.farmer_id);
 
-      navigate("/");
+      navigate("/dashboard");
     } catch (err) {
       setError("Invalid credentials");
       // --> TRIGGER SONNER ERROR TOAST <--

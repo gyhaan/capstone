@@ -162,10 +162,19 @@ export default function RegisterFarmModal({ isOpen, onClose, onSuccess }) {
                   <SelectValue placeholder="Crop" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Maize">Maize</SelectItem>
+                  <SelectItem value="Bananas">Bananas</SelectItem>
                   <SelectItem value="Beans">Beans</SelectItem>
-                  <SelectItem value="Potatoes">Irish Potatoes</SelectItem>
                   <SelectItem value="Cassava">Cassava</SelectItem>
+                  <SelectItem value="Climbing bean">Climbing bean</SelectItem>
+                  <SelectItem value="Ground nuts">Ground nuts</SelectItem>
+                  <SelectItem value="Irish potatoes">Irish potatoes</SelectItem>
+                  <SelectItem value="Maize">Maize</SelectItem>
+                  <SelectItem value="Paddy rice">Paddy rice</SelectItem>
+                  <SelectItem value="Peas">Peas</SelectItem>
+                  <SelectItem value="Sorghum">Sorghum</SelectItem>
+                  <SelectItem value="Soya beans">Soya beans</SelectItem>
+                  <SelectItem value="Sweet potatoes">Sweet potatoes</SelectItem>
+                  <SelectItem value="Wheat">Wheat</SelectItem>
                 </SelectContent>
               </Select>
             </div>

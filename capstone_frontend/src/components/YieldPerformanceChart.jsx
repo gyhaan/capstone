@@ -95,7 +95,7 @@ const YieldPerformanceChart = ({ predictions }) => {
         Baseline: pred.baseline_yield_kg_ha,
         status: pred.health_status,
       }))
-      .slice(0, 6); // Limit to max 6 farms so the bars don't get too squished
+      .slice(0, 8); // Limit to max 6 farms so the bars don't get too squished
   }, [predictions]);
 
   // Helper to color the Predicted bar based on its AI status

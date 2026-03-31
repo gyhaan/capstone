@@ -254,7 +254,7 @@ const FarmDetails = () => {
               
               {/* The Area Chart takes up 2/3 of the screen */}
               <div className="col-span-1 lg:col-span-2">
-                <IrrigationForecastChart prediction={latest} />
+                <IrrigationForecastChart prediction={latest} cropName={farm.crop}/>  
               </div>
 
               {/* The AI Advisory takes up 1/3 of the screen */}

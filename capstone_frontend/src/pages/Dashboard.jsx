@@ -16,11 +16,9 @@ import RegisterFarmModal from "@/components/RegisterFarmModal";
 import { toast } from "sonner";
 import PortfolioHealthChart from "@/components/PortfolioHealthChart";
 import YieldPerformanceChart from "@/components/YieldPerformanceChart";
-import IrrigationForecastChart from "@/components/IrrigationForecastChart";
 
 const Dashboard = () => {
   const [farms, setFarms] = useState([]);
-  // --> NEW: Added predictions state <--
   const [predictions, setPredictions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [cronLoading, setCronLoading] = useState(false);
@@ -34,14 +32,48 @@ const Dashboard = () => {
     if (!farmerId) return;
     setLoading(true);
 
-    // Fetch farms AND predictions simultaneously using your clean farmerService
     Promise.all([
       farmerService.getFarmerFarms(farmerId),
       farmerService.getFarmerHistory(farmerId),
     ])
       .then(([farmsRes, predsRes]) => {
-        setFarms(farmsRes.data);
-        setPredictions(predsRes.data);
+        const activeFarms = farmsRes.data;
+        const allHistory = predsRes.data;
+        
+        setFarms(activeFarms);
+
+        // --- BULLETPROOF FILTERING & DATA MERGE ---
+        
+        // 1. Loop through the active farms we just fetched
+        const latestPredictions = activeFarms.map((farm) => {
+          
+          // 2. Find all historical predictions that belong to THIS specific farm
+          const predsForThisFarm = allHistory.filter(
+            (p) => p.farm_id === farm._id
+          );
+
+          // If this farm hasn't been scanned by the AI yet, skip it
+          if (predsForThisFarm.length === 0) return null;
+
+          // 3. Sort the predictions for this farm by date (Newest first)
+          predsForThisFarm.sort(
+            (a, b) => new Date(b.created_at) - new Date(a.created_at)
+          );
+
+          // 4. THE FIX: Grab the newest prediction, and inject the farm details!
+          const latestPred = predsForThisFarm[0];
+          return {
+            ...latestPred,       // Keep all AI data (yield, health, rainfall, etc.)
+            crop: farm.crop,     // <-- INJECTED FOR TOOLTIP
+            district: farm.district // <-- INJECTED FOR TOOLTIP
+          };
+        });
+
+        // 5. Remove any "null" values (farms without predictions) and update state
+        const cleanPredictions = latestPredictions.filter((pred) => pred !== null);
+        
+        setPredictions(cleanPredictions);
+        // -----------------------------------------
       })
       .catch((err) => {
         console.error("Error loading data:", err);
@@ -71,7 +103,7 @@ const Dashboard = () => {
     } catch (error) {
       console.error("Cron failed:", error);
       toast.error(
-        "Failed to trigger update. Check if your FastAPI server is running.",
+        "Failed to trigger update. Check if your FastAPI server is running."
       );
       setCronLoading(false);
     }
@@ -86,7 +118,7 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="p-6 space-y-8 max-w-6xl mx-auto">
+    <div className="p-6 space-y-8 max-w-6xl mx-auto font-sans">
       <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b pb-6">
         <div>
           <h1 className="text-3xl font-bold text-green-900">
@@ -120,12 +152,9 @@ const Dashboard = () => {
         </div>
       </header>
 
-      {/* ---> NEW: CHARTS SECTION <--- */}
-      {/* We only show the charts if the farmer actually has farms registered */}
+      {/* CHARTS SECTION */}
       {farms.length > 0 && (
         <section className="space-y-6">
-          
-          {/* TOP ROW: Donut Chart & Bar Chart */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="col-span-1">
               <PortfolioHealthChart predictions={predictions} />
@@ -134,10 +163,10 @@ const Dashboard = () => {
               <YieldPerformanceChart predictions={predictions} />
             </div>
           </div>
-
         </section>
       )}
 
+      {/* FARMS LIST SECTION */}
       <section className="space-y-4">
         <h2 className="text-xl font-semibold text-gray-800">My Fields</h2>
         {farms.length === 0 ? (
@@ -184,8 +213,7 @@ const Dashboard = () => {
                     className="w-full bg-green-50 text-green-700 hover:bg-green-100 hover:text-green-800 border border-green-200"
                     variant="secondary"
                   >
-                    View Health & AI Data{" "}
-                    <ArrowRight className="ml-2 h-4 w-4" />
+                    View Health & AI Data <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
                 </CardContent>
               </Card>

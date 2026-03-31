@@ -133,6 +133,9 @@ async def generate_prediction(request: PredictRequest):
     # Construct the lookup key based on the farmer's specific farm
     baseline_key = f"{district}_{crop}"
 
+    print(district)
+    print(crop)
+
     baseline_yield = REGIONAL_BASELINES.get(
         baseline_key, 
         GLOBAL_CROP_FALLBACKS.get(crop, 1500.0)

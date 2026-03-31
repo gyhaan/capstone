@@ -1,13 +1,35 @@
 import requests
 from datetime import datetime
 
+# ---> Scientific Water Requirements (Average mm per week) <---
+# Based on FAO Crop Water Information standards
+CROP_WATER_NEEDS = {
+    "Paddy rice": 50.0,
+    "Bananas": 40.0,
+    "Banana for beer": 40.0,
+    "Cooking Banana": 40.0,
+    "Dessert banana": 40.0,
+    "Maize": 30.0,
+    "Irish potatoes": 25.0,
+    "Wheat": 25.0,
+    "Yams & Taro": 25.0,
+    "Beans": 20.0,
+    "Bush bean": 20.0,
+    "Climbing bean": 20.0,
+    "Soya beans": 20.0,
+    "Peas": 20.0,
+    "Sweet potatoes": 20.0,
+    "Ground nuts": 20.0,
+    "Sorghum": 15.0,
+    "Cassava": 10.0,
+}
+
 def get_live_weather(lat: float, lon: float, start_date: str, end_date: str):
     """
     Fetches weather data for a highly specific GPS coordinate.
     """
     print(f"Fetching live weather for coordinates: {lat}, {lon}...")
 
-    # Notice how we skip the Geocoding API and inject lat/lon directly!
     weather_url = (
         f"https://archive-api.open-meteo.com/v1/archive?"
         f"latitude={lat}&longitude={lon}"
@@ -37,7 +59,6 @@ def get_live_weather(lat: float, lon: float, start_date: str, end_date: str):
         "Average_Temp_C": round(average_temp, 2)
     }
 
-
 def get_7_day_forecast(lat: float, lon: float) -> dict:
     url = f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&daily=precipitation_sum,temperature_2m_max&timezone=Africa/Kigali&forecast_days=7"
     res = requests.get(url).json()
@@ -54,9 +75,23 @@ def get_7_day_forecast(lat: float, lon: float) -> dict:
     }
 
 def generate_crop_advisory(crop: str, forecast_rain_mm: float) -> str:
-    if forecast_rain_mm > 50:
-        return f"Warning: Heavy rain ({forecast_rain_mm}mm) expected over the next 7 days. Ensure your {crop} fields have proper drainage trenches to prevent waterlogging and root rot."
-    elif forecast_rain_mm < 10:
-        return f"Alert: Very dry week ahead (only {forecast_rain_mm}mm rain). Plan to heavily irrigate your {crop} fields early in the morning or late evening to prevent heat stress."
+    """
+    Generates a dynamic SMS/USSD advisory based on FAO water requirements.
+    """
+    # 1. Look up the specific crop's water needs (fallback to 20mm if not found)
+    target_rain = CROP_WATER_NEEDS.get(crop, 20.0)
+    
+    # 2. Define dynamic thresholds based on the target
+    deficit_threshold = target_rain * 0.7  # Less than 70% of required water
+    flood_threshold = target_rain * 2.0    # More than double the required water
+
+    # 3. Generate the dynamic advisory
+    if forecast_rain_mm > flood_threshold:
+        return f"Warning: Heavy rain ({forecast_rain_mm}mm) expected. Your {crop} only needs {target_rain}mm. Ensure proper drainage trenches to prevent root rot."
+        
+    elif forecast_rain_mm < deficit_threshold:
+        deficit_amount = round(target_rain - forecast_rain_mm, 1)
+        return f"Alert: Dry week ahead ({forecast_rain_mm}mm). Your {crop} needs {target_rain}mm. Plan to irrigate ~{deficit_amount}mm to prevent heat stress."
+        
     else:
-        return f"Good news: Moderate rainfall ({forecast_rain_mm}mm) expected. These are favorable growing conditions for {crop}. Proceed with routine weeding and fertilization."
+        return f"Good news: Expected rainfall ({forecast_rain_mm}mm) is optimal for your {crop} (target: {target_rain}mm). Proceed with routine weeding."
