@@ -1,0 +1,75 @@
+Folder PATH listing
+Volume serial number is 8AF0-7850
+C:.
+�   .env
+�   .gitignore
+�   baseline_yield.ipynb
+�   baseline_yield_comparison.png
+�   cleaned_2021_all_crops_anchors.csv
+�   crop_baselines.json
+�   crop_yield_data.csv
+�   final_ml_training_data.csv
+�   historical_real_ndvi_2015_2021.csv
+�   historical_weather_2015_2021.csv
+�   master_training_data_with_ndvi.csv
+�   notebook.ipynb
+�   requirements-v1.txt
+�   requirements.txt
+�   structure.txt
+�   
++---.pytest_cache
+�   �   .gitignore
+�   �   CACHEDIR.TAG
+�   �   README.md
+�   �   
+�   +---v
+�       +---cache
+�               lastfailed
+�               nodeids
+�               
++---app
+�   �   database.py
+�   �   main.py
+�   �   models.py
+�   �   state.py
+�   �   
+�   +---routes
+�   �   �   farmers.py
+�   �   �   predictions.py
+�   �   �   ussd.py
+�   �   �   
+�   �   +---__pycache__
+�   �           farmers.cpython-313.pyc
+�   �           predictions.cpython-313.pyc
+�   �           ussd.cpython-313.pyc
+�   �           
+�   +---scheduler
+�   �   �   cron_tasks.py
+�   �   �   
+�   �   +---__pycache__
+�   �           cron_tasks.cpython-313.pyc
+�   �           
+�   +---services
+�   �   �   ml_service.py
+�   �   �   ndvi_fetcher.py
+�   �   �   weather_fetcher.py
+�   �   �   
+�   �   +---__pycache__
+�   �           ndvi_fetcher.cpython-313.pyc
+�   �           weather_fetcher.cpython-313.pyc
+�   �           
+�   +---__pycache__
+�           database.cpython-313.pyc
+�           main.cpython-313.pyc
+�           models.cpython-313.pyc
+�           state.cpython-313.pyc
+�           
++---ml_models
+�       crop_yield_model.pkl
+�       
++---tests
+�   �   test_farmers.py
+�   �   
+�   +---__pycache__
+�           test_farmers.cpython-313-pytest-9.0.2.pyc
+�           

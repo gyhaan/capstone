@@ -7,13 +7,14 @@ import { Toaster } from "sonner";
 import Signup from "./pages/Signup";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
-import MapPage from "./pages/MapPage"; // <-- NEW IMPORT
+import MapPage from "./pages/MapPage"; 
 import FarmDetails from "./pages/FarmDetails";
 import Home from "./pages/Home";
 import AgriGuardLanding from "./pages/NuraHeath";
 
 // Layout
-import DashboardLayout from "./components/DashboardLayout"; // <-- NEW IMPORT
+import DashboardLayout from "./components/DashboardLayout"; 
+import LegalPage from "./pages/LegalPage";
 
 function App() {
   const [user, setUser] = useState(null);
@@ -39,6 +40,7 @@ function App() {
           <Route path="/nura" element={<AgriGuardLanding />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/login" element={<Login onLoginSuccess={(id) => setUser(id)} />} />
+          <Route path="/legal" element={<LegalPage />} />
           
           {/* Protected Routes wrapped in the new Layout */}
           <Route path="/dashboard" element={user ? <DashboardLayout /> : <Navigate to="/login" />}>

@@ -54,10 +54,11 @@ async def ussd_callback(
     
     # --- ROOT MENU ---
     if text == "":
-        return "CON Welcome to AfriGuard\n1. Login (Injira)\n2. SignUp (Iyandikishe)"
+        return "CON Welcome to AfriGuard\n1. Login (Injira)\n2. SignUp (Iyandikishe)\n3. Privacy Policy (Amabwiriza y'Ibanga)"
         
     is_login = text_array[0] == "1"
     is_signup = text_array[0] == "2"
+    is_privacy = text_array[0] == "3"
     
     logged_in_index = -1
     farmer = None
@@ -101,6 +102,10 @@ async def ussd_callback(
             if not farmer:
                 return "END Incorrect PIN (Umubare si wo). Session ended."
             logged_in_index = 4
+
+    # --- 3. PRIVACY POLICY FLOW ---
+    elif is_privacy:
+        return "END Privacy (Ibanga):\nWe use your GPS & phone for AI crop alerts only. Data is secure & not sold.\nFull terms on our web platform."
 
     else:
         return "END Invalid option (Amahitamo si yo)."

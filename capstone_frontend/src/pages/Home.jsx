@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Sprout, 
@@ -8,15 +8,98 @@ import {
   BarChart3, 
   Map, 
   ArrowRight, 
-  CheckCircle2 
+  CheckCircle2,
+  ShieldAlert // <-- New icon for the modal
 } from 'lucide-react';
 
 const Home = () => {
   const navigate = useNavigate();
+  
+  // --- NEW: State for the EULA Modal ---
+  const [showEula, setShowEula] = useState(false);
+
+  useEffect(() => {
+    // Check if they have already accepted the terms in a previous session
+    const hasAccepted = localStorage.getItem('agriGuard_eula_accepted');
+    
+    if (!hasAccepted) {
+      setShowEula(true);
+      // Prevent scrolling while the modal is open
+      document.body.style.overflow = 'hidden';
+    }
+
+    // Cleanup scrolling if component unmounts
+    return () => {
+      document.body.style.overflow = 'auto';
+    };
+  }, []);
+
+  const handleAccept = () => {
+    localStorage.setItem('agriGuard_eula_accepted', 'true');
+    setShowEula(false);
+    document.body.style.overflow = 'auto'; // Restore scrolling
+  };
+
+  const handleDecline = () => {
+    // Throw them out! Redirects them away from the application.
+    // You can change this URL to wherever you want to banish them to.
+    window.location.href = "https://www.google.com"; 
+  };
+  // -------------------------------------
 
   return (
-    <div className="min-h-screen bg-white font-sans text-gray-900">
+    <div className="min-h-screen bg-white font-sans text-gray-900 relative">
       
+      {/* --- NEW: EULA Blocking Modal --- */}
+      {showEula && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-gray-900/80 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-8 animate-in fade-in zoom-in duration-300">
+            <div className="flex items-center gap-4 mb-6">
+              <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center shrink-0">
+                <ShieldAlert className="w-6 h-6 text-green-700" />
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900">Welcome to AgriGuard</h2>
+                <p className="text-sm text-gray-500">Action Required to Proceed</p>
+              </div>
+            </div>
+            
+            <div className="space-y-4 text-gray-600 mb-8">
+              <p>
+                Before accessing the AgriGuard predictive platform, you must read and agree to our End-User Licence Agreement (EULA) and Privacy Policy.
+              </p>
+              <p className="text-sm bg-gray-50 p-4 rounded-lg border border-gray-100">
+                <strong>Key terms:</strong> Your GPS and phone number are strictly used for generating AI crop health assessments and will not be sold. Predictions are for advisory purposes only.
+              </p>
+              
+              {/* Opens the legal page in a NEW tab so they don't lose the modal */}
+              <button 
+                onClick={() => window.open('/legal', '_blank')}
+                className="text-green-600 hover:text-green-700 font-semibold text-sm underline underline-offset-2"
+              >
+                Read the full Privacy Policy & Terms of Service
+              </button>
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-gray-100">
+              <button 
+                onClick={handleDecline}
+                className="px-6 py-3 w-full sm:w-auto text-gray-600 bg-gray-100 hover:bg-gray-200 hover:text-gray-900 font-semibold rounded-xl transition-colors"
+              >
+                I Decline
+              </button>
+              <button 
+                onClick={handleAccept}
+                className="px-6 py-3 w-full sm:w-auto flex-1 bg-green-600 hover:bg-green-700 text-white font-bold rounded-xl shadow-lg shadow-green-200 transition-all"
+              >
+                I Accept & Continue
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* -------------------------------- */}
+
       {/* Navigation Bar */}
       <nav className="flex items-center justify-between px-8 py-4 bg-white border-b sticky top-0 z-50">
         <div className="flex items-center gap-2">
@@ -133,6 +216,15 @@ const Home = () => {
           <Sprout className="h-10 w-10 text-green-500 mb-2" />
           <p className="text-lg">AgriGuard Capstone Project</p>
           <p className="text-sm">Developed by Ganza Owen Yhaan • BSc. Software Engineering, ALU</p>
+          
+          <div className="mt-4 pt-4 border-t border-gray-800 w-full max-w-xs">
+            <button 
+              onClick={() => navigate('/legal')}
+              className="text-sm text-gray-400 hover:text-green-500 transition-colors underline underline-offset-4"
+            >
+              Privacy Policy & Terms of Service
+            </button>
+          </div>
         </div>
       </footer>
     </div>
