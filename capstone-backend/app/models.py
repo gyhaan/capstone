@@ -3,6 +3,7 @@ from pydantic_core import core_schema
 from typing import Any
 from datetime import datetime
 from bson import ObjectId
+from typing import Optional
 
 # 1. New V2-Compatible PyObjectId
 class PyObjectId(str):
@@ -39,7 +40,8 @@ class FarmerModel(BaseModel):
     id: PyObjectId = Field(default_factory=PyObjectId, alias="_id")
     full_name: str
     phone_number: str
-    pin: str = Field(..., min_length=4, max_length=4) # Forces a 4-digit PIN
+    pin_hash: str 
+    password_hash: Optional[str] = None 
     registered_at: datetime = Field(default_factory=datetime.utcnow)
 
 # 3. Updated Farm Model

@@ -13,10 +13,11 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { farmerService } from "@/services/api";
 import { Loader2, Lock } from "lucide-react";
-import { toast } from "sonner"; // <-- NEW IMPORT
+import { toast } from "sonner";
 
 export default function Login({ onLoginSuccess }) {
-  const [formData, setFormData] = useState({ phone_number: "", pin: "" });
+  // Switched from 'pin' to 'password'
+  const [formData, setFormData] = useState({ phone_number: "", password: "" });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const navigate = useNavigate();
@@ -29,21 +30,23 @@ export default function Login({ onLoginSuccess }) {
     try {
       const response = await farmerService.login(formData);
 
-      // Save to storage (for refresh persistence)
+      // Save standard data
       localStorage.setItem("farmer_id", response.data.farmer_id);
       localStorage.setItem("full_name", response.data.full_name);
+      
+      // ---> NEW: Save the secure JWT Token <---
+      localStorage.setItem("agriGuard_token", response.data.access_token);
 
-      // --> TRIGGER SONNER SUCCESS TOAST <--
       toast.success(`Welcome back, ${response.data.full_name}!`);
 
-      // Update the App's state (for immediate redirect)
-      onLoginSuccess(response.data.farmer_id);
+      if (onLoginSuccess) {
+          onLoginSuccess(response.data.farmer_id);
+      }
 
       navigate("/dashboard");
     } catch (err) {
-      setError("Invalid credentials");
-      // --> TRIGGER SONNER ERROR TOAST <--
-      toast.error("Login failed. Please check your phone number and PIN.");
+      setError(err.response?.data?.detail || "Invalid credentials");
+      toast.error("Login failed. Please check your phone number and password.");
     } finally {
       setLoading(false);
     }
@@ -79,15 +82,14 @@ export default function Login({ onLoginSuccess }) {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="pin">4-Digit PIN</Label>
+              <Label htmlFor="password">Web Password</Label>
               <Input
-                id="pin"
+                id="password"
                 type="password"
-                maxLength={4}
-                placeholder="****"
+                placeholder="Enter secure password"
                 required
                 onChange={(e) =>
-                  setFormData({ ...formData, pin: e.target.value })
+                  setFormData({ ...formData, password: e.target.value })
                 }
               />
             </div>
@@ -102,7 +104,7 @@ export default function Login({ onLoginSuccess }) {
               ) : (
                 <Lock className="mr-2 h-4 w-4" />
               )}
-              Login
+              Secure Login
             </Button>
             <p className="text-sm text-gray-500">
               Don't have an account?{" "}

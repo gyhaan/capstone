@@ -6,6 +6,18 @@ const api = axios.create({
     baseURL: API_BASE_URL,
 });
 
+// ---> NEW: Axios Interceptor for JWT Security <---
+// Before any request leaves the frontend, attach the secure token to the headers
+api.interceptors.request.use((config) => {
+    const token = localStorage.getItem('agriGuard_token');
+    if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+}, (error) => {
+    return Promise.reject(error);
+});
+
 export const farmerService = {
     register: (data) => api.post('/farmers', data),
     login: (credentials) => api.post('/login', credentials),

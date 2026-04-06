@@ -6,26 +6,56 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { farmerService } from "../services/api";
 import { Loader2, UserPlus } from "lucide-react";
-import { toast } from "sonner"; // <-- NEW IMPORT
+import { toast } from "sonner"; 
 
 function Signup() {
-  const [formData, setFormData] = useState({ full_name: "", phone_number: "", pin: "" });
+  // Added 'password' to the state
+  const [formData, setFormData] = useState({ full_name: "", phone_number: "", pin: "", password: "" });
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const handleSignup = async (e) => {
+const handleSignup = async (e) => {
     e.preventDefault();
+
+    // 1. Phone Number Validation (+250 followed by 9 digits)
+    const phoneRegex = /^\+250\d{9}$/;
+    if (!phoneRegex.test(formData.phone_number)) {
+      toast.error("Invalid phone number format. Please use +250XXXXXXXXX");
+      return; 
+    }
+
+    // 2. USSD PIN Validation (Exactly 4 digits)
+    const pinRegex = /^\d{4}$/;
+    if (!pinRegex.test(formData.pin)) {
+      toast.error("Your USSD PIN must be exactly 4 numeric digits.");
+      return;
+    }
+
+    // 3. Web Password Validation (Matching our FastAPI Pydantic rules)
+    const pwd = formData.password;
+    if (pwd.length < 8) {
+      toast.error("Web password must be at least 8 characters long.");
+      return;
+    }
+    if (!/[A-Z]/.test(pwd)) {
+      toast.error("Web password must contain at least one uppercase letter.");
+      return;
+    }
+    if (!/\d/.test(pwd)) {
+      toast.error("Web password must contain at least one number.");
+      return;
+    }
+
+    // If it passes all the checks, proceed to the backend!
     setLoading(true);
     try {
       await farmerService.register(formData);
       
-      // --> TRIGGER SONNER SUCCESS TOAST <--
-      toast.success("Registration successful! Please login.");
-      
+      toast.success("Registration successful! Please login with your Web Password.");
       navigate("/login");
+      
     } catch (err) {
-      // --> TRIGGER SONNER ERROR TOAST <--
-      toast.error("Registration failed. This phone number might already be in use.");
+      toast.error(err.response?.data?.detail || "Registration failed. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -48,10 +78,22 @@ function Signup() {
               <Label htmlFor="phone">Phone Number</Label>
               <Input id="phone" placeholder="+250..." required onChange={(e) => setFormData({...formData, phone_number: e.target.value})} />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="pin">Set 4-Digit PIN</Label>
-              <Input id="pin" type="password" maxLength={4} placeholder="1234" required onChange={(e) => setFormData({...formData, pin: e.target.value})} />
+            
+            {/* Split Security Contexts */}
+            <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                <Label htmlFor="pin">USSD PIN</Label>
+                <Input id="pin" type="password" maxLength={4} placeholder="4 Digits" required onChange={(e) => setFormData({...formData, pin: e.target.value})} />
+                <p className="text-[10px] text-gray-500 leading-tight">Used for offline *384# access</p>
+                </div>
+                
+                <div className="space-y-2">
+                <Label htmlFor="password">Web Password</Label>
+                <Input id="password" type="password" placeholder="Secure Password" required onChange={(e) => setFormData({...formData, password: e.target.value})} />
+                <p className="text-[10px] text-gray-500 leading-tight">Used to login to this dashboard</p>
+                </div>
             </div>
+
           </CardContent>
           <CardFooter className="flex flex-col gap-4">
             <Button className="w-full bg-green-700 hover:bg-green-800" disabled={loading}>

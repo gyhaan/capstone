@@ -5,6 +5,7 @@ from datetime import datetime
 
 # --- IMPORTANT: Update these imports to match the actual backend structure ---
 from app.services.weather_fetcher import get_7_day_forecast, generate_crop_advisory
+from app.security import verify_password
 # from app.routes.predictions import run_farm_prediction
 
 router = APIRouter()
@@ -127,11 +128,19 @@ async def ussd_callback(
     if is_login:
         if len(text_array) == 2:
             return f"CON {t['enter_pin']}"
+        
         elif len(text_array) >= 3:
-            pin = text_array[2]
-            farmer = await farmer_collection.find_one({"phone_number": phoneNumber, "pin": pin})
-            if not farmer:
+            user_input_pin = text_array[2]
+            
+            # 1. Fetch the farmer ONLY by their phone number
+            farmer = await farmer_collection.find_one({"phone_number": phoneNumber})
+            
+            # 2. Check if farmer exists, then securely verify the bcrypt hash!
+            # We use .get("pin_hash", "") as a safe fallback just in case
+            if not farmer or not verify_password(user_input_pin, farmer.get("pin_hash", "")):
                 return f"END {t['invalid_pin_try']}"
+                
+            # 3. Success! Move them forward in the menu
             logged_in_index = 3
 
     # --- 2. SIGNUP FLOW ---
